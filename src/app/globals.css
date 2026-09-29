@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+/* =========================================================
+   RED BUNDER THEME
+========================================================= */
+
+@theme {
+  --color-brand: #e50914;
+  --color-brand-dark: #b20710;
+  --color-brand-light: #ff3b3b;
+
+  --color-ink: #111111;
+  --color-ink-soft: #1c1c1c;
+  --color-cream: #faf6ef;
+  --color-muted: #6b6b6b;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-oswald), Impact, "Arial Narrow", sans-serif;
+  --font-script: var(--font-kaushan), "Brush Script MT", cursive;
+}
+
+/* =========================================================
+   BASE
+========================================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+
+  background: #faf6ef;
+
+  font-family:
+    var(--font-inter),
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   SELECTION
+========================================================= */
+
+::selection {
+  background: #e50914;
+  color: #ffffff;
+}
+
+/* =========================================================
+   FORM
+========================================================= */
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+select {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Number input oklarını kaldır */
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+/* =========================================================
+   AUTOFILL
+========================================================= */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #171717;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  box-shadow: 0 0 0 1000px #ffffff inset;
+}
+
+/* =========================================================
+   DISPLAY FONT
+========================================================= */
+
+.font-display {
+  font-family:
+    var(--font-oswald),
+    Oswald,
+    Impact,
+    "Arial Narrow",
+    sans-serif;
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+  width: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111111;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid #111111;
+  border-radius: 999px;
+  background: #444444;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e50914;
+}
+
+/* =========================================================
+   OPTIONAL HELPERS
+========================================================= */
+
+.brand-glow {
+  box-shadow: 0 14px 40px rgb(229 9 20 / 25%);
+}
+
+.brand-glow-strong {
+  box-shadow: 0 20px 60px rgb(229 9 20 / 35%);
+}
+
+.text-brand-gradient {
+  background: linear-gradient(
+    90deg,
+    #b20710,
+    #ff3b3b
+  );
+
+  background-clip: text;
+  -webkit-background-clip: text;
+
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}

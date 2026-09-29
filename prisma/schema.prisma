@@ -1,0 +1,339 @@
+// =====================================================================
+//  Red Bunder – ORTAK veritabanı şeması
+//  Bu dosyanın sahibi "web" projesidir; migration'lar sadece burada üretilir.
+//  "cv" projesi aynı dosyayı `npm run db:sync` ile kopyalar (migration çalıştırmaz).
+//  Şemayı değiştirince: web'de `npm run db:migrate`, cv'de `npm run db:sync`.
+// =====================================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+/**
+ * ----------------------------- Admin kullanıcıları -----------------------------
+ */
+
+enum Role {
+  ADMIN // Her şey + kullanıcı yönetimi
+  EDITOR // Menü, şubeler, QR, site içeriği
+  HR // Başvurular, pozisyonlar
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(100)
+  email        String    @unique @db.VarChar(191)
+  passwordHash String    @db.VarChar(100)
+  role         Role      @default(EDITOR)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tasksAssigned Task[]    @relation("TaskAssignee")
+  tasksCreated  Task[]    @relation("TaskCreator")
+  adEntries     AdEntry[] @relation("AdEntryCreator")
+
+  @@map("users")
+}
+
+/**
+ * ----------------------------------- Şubeler -----------------------------------
+ */
+
+model Branch {
+  id           Int      @id @default(autoincrement())
+  slug         String   @unique @db.VarChar(64)
+  name         String   @db.VarChar(120)
+  district     String?  @db.VarChar(80)
+  address      String?  @db.VarChar(255)
+  phone        String?  @db.VarChar(20)
+  /// Google Maps paylaşım / embed linki
+  mapUrl       String?  @db.VarChar(500)
+  /// Örn: "Her gün 11:00 – 02:00"
+  openingHours String?  @db.VarChar(120)
+  imageUrl     String?  @db.VarChar(255)
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications    Application[]
+  contactMessages ContactMessage[]
+
+  @@index([isActive, sortOrder])
+  @@map("branches")
+}
+
+/**
+ * ------------------------------------ Menü -------------------------------------
+ */
+
+model MenuCategory {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique @db.VarChar(64)
+  name        String   @db.VarChar(100)
+  description String?  @db.VarChar(255)
+  imageUrl    String?  @db.VarChar(255)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@index([isActive, sortOrder])
+  @@map("menu_categories")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique @db.VarChar(100)
+  name        String   @db.VarChar(120)
+  description String?  @db.Text
+  /// Fiyat (TL) – tüm şubelerde aynı
+  price       Decimal  @db.Decimal(10, 2)
+  imageUrl    String?  @db.VarChar(255)
+  calories    Int?     @db.UnsignedSmallInt
+  /// Virgülle ayrılmış: "gluten, süt, susam"
+  allergens   String?  @db.VarChar(255)
+  isNew       Boolean  @default(false)
+  isPopular   Boolean  @default(false)
+  isSpicy     Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categoryId Int
+  category   MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([categoryId, isActive, sortOrder])
+  @@map("products")
+}
+
+/**
+ * ------------------------- Kariyer (cv.redbunder.com) --------------------------
+ */
+
+enum Gender {
+  KADIN
+  ERKEK
+  DIGER
+}
+
+enum ApplicationStatus {
+  YENI
+  INCELENIYOR
+  GORUSME
+  KABUL
+  RED
+}
+
+/// Çalışılabilecek alanlar (Mutfak, Servis, Kasiyer, Kurye, Vardiya Sorumlusu...)
+model Position {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique @db.VarChar(64)
+  title       String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  applications Application[]
+
+  @@index([isActive, sortOrder])
+  @@map("positions")
+}
+
+model Application {
+  id          Int               @id @default(autoincrement())
+  fullName    String            @db.VarChar(100)
+  /// Normalize edilmiş format: 05XXXXXXXXX
+  phone       String            @db.VarChar(11)
+  gender      Gender
+  age         Int               @db.UnsignedTinyInt
+  status      ApplicationStatus @default(YENI)
+  /// Admin tarafından eklenen dahili not
+  note        String?           @db.Text
+  kvkkConsent Boolean           @default(false)
+  ip          String?           @db.VarChar(45)
+  userAgent   String?           @db.VarChar(255)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  positionId Int
+  position   Position @relation(fields: [positionId], references: [id], onDelete: Restrict)
+  branchId   Int?
+  branch     Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([positionId])
+  @@index([branchId])
+  @@index([createdAt])
+  @@index([phone])
+  @@map("applications")
+}
+
+/**
+ * -------------------------------- Site içeriği ---------------------------------
+ */
+
+enum ContactTopic {
+  GENEL
+  ONERI_GORUS
+  SIKAYET
+  FRANCHISE
+  DIGER
+}
+
+/// İletişim formu mesajları (Admin > Mesajlar)
+model ContactMessage {
+  id        Int          @id @default(autoincrement())
+  topic     ContactTopic @default(GENEL)
+  name      String       @db.VarChar(100)
+  email     String?      @db.VarChar(191)
+  phone     String?      @db.VarChar(20)
+  subject   String?      @db.VarChar(150)
+  message   String       @db.Text
+  isRead    Boolean      @default(false)
+  ip        String?      @db.VarChar(45)
+  createdAt DateTime     @default(now())
+
+  /// Mesaj belirli bir şubeyle ilgiliyse (öneri, şikayet...)
+  branchId Int?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@index([isRead, createdAt])
+  @@index([topic])
+  @@index([branchId])
+  @@map("contact_messages")
+}
+
+/// Anahtar/değer site ayarları (telefon, sosyal medya linkleri vb.)
+model Setting {
+  key       String   @id @db.VarChar(64)
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+/// Ana sayfadaki müşteri yorumları (admin panelinden elle eklenir)
+model Review {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(80)
+  /// 1–5
+  rating    Int      @default(5) @db.UnsignedTinyInt
+  text      String   @db.VarChar(500)
+  /// Nereden geldiği: "Google", "Instagram"... (opsiyonel)
+  source    String?  @db.VarChar(40)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@map("reviews")
+}
+
+/**
+ * ------------------------------ Pazarlama: reklamlar ------------------------------
+ */
+
+enum AdPlatform {
+  META
+  GOOGLE
+  TIKTOK
+  TRENDYOL
+  YEMEKSEPETI
+  GETIR
+  MIGROS
+  DIGER
+}
+
+/// Reklam performans kaydı – platform panellerinden elle girilir (dönem bazlı)
+model AdEntry {
+  id          Int        @id @default(autoincrement())
+  platform    AdPlatform
+  /// Kampanya / reklam seti adı (opsiyonel)
+  campaign    String?    @db.VarChar(150)
+  periodStart DateTime   @db.Date
+  periodEnd   DateTime   @db.Date
+  /// Harcama (TL)
+  spend       Decimal    @db.Decimal(12, 2)
+  impressions Int?       @db.UnsignedInt
+  clicks      Int?       @db.UnsignedInt
+  /// Sipariş / dönüşüm sayısı
+  orders      Int?       @db.UnsignedInt
+  /// Reklamdan gelen ciro (TL)
+  revenue     Decimal?   @db.Decimal(12, 2)
+  note        String?    @db.Text
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  createdById Int?
+  createdBy   User? @relation("AdEntryCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([platform, periodStart])
+  @@index([periodStart])
+  @@map("ad_entries")
+}
+
+/**
+ * ---------------------------------- Görev takibi ---------------------------------
+ */
+
+enum TaskStatus {
+  YAPILACAK
+  DEVAM
+  TAMAM
+}
+
+enum TaskPriority {
+  DUSUK
+  NORMAL
+  YUKSEK
+}
+
+enum TaskCategory {
+  REKLAM
+  SOSYAL_MEDYA
+  KAMPANYA
+  OPERASYON
+  MENU
+  IK
+  DIGER
+}
+
+/// Yapılacaklar / takvim
+model Task {
+  id          Int          @id @default(autoincrement())
+  title       String       @db.VarChar(150)
+  description String?      @db.Text
+  status      TaskStatus   @default(YAPILACAK)
+  priority    TaskPriority @default(NORMAL)
+  category    TaskCategory @default(DIGER)
+  /// İlgili reklam platformu (opsiyonel)
+  platform    AdPlatform?
+  dueDate     DateTime     @db.Date
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  assigneeId  Int?
+  assignee    User? @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdById Int?
+  createdBy   User? @relation("TaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([dueDate])
+  @@index([status, dueDate])
+  @@index([assigneeId])
+  @@map("tasks")
+}
