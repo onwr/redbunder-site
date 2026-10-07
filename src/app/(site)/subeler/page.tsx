@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { ArrowRight, BriefcaseBusiness } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, BriefcaseBusiness, Megaphone } from "lucide-react";
 import { getActiveBranches } from "@/lib/services/menu";
+import { getVisibleAnnouncements } from "@/lib/services/announcements";
 import { SITE } from "@/lib/constants";
 import PageHero from "@/components/site/PageHero";
 import BranchFinder from "@/components/site/BranchFinder";
@@ -13,7 +15,15 @@ export const metadata: Metadata = {
 
 export default async function BranchesPage() {
   await connection();
-  const branches = await getActiveBranches();
+  const [branches, announcements] = await Promise.all([getActiveBranches(), getVisibleAnnouncements()]);
+  const general = announcements.filter((a) => !a.branch);
+  // Şube kartında: o şubeye özel en yeni duyuru (liste createdAt desc)
+  const latestByBranch = new Map<number, { title: string; count: number }>();
+  for (const a of announcements) {
+    if (!a.branch) continue;
+    const cur = latestByBranch.get(a.branch.id);
+    latestByBranch.set(a.branch.id, cur ? { ...cur, count: cur.count + 1 } : { title: a.title, count: 1 });
+  }
   const districtCount = new Set(branches.map((b) => b.district).filter(Boolean)).size;
 
   return (
@@ -24,6 +34,23 @@ export default async function BranchesPage() {
 
       <section className="bg-[#f5f4f1] px-5 pb-20 pt-10 lg:px-8 lg:pt-14 xl:px-10">
         <div className="mx-auto max-w-[1500px]">
+          {general.length > 0 && (
+            <Link
+              href="/duyurular"
+              className="group mb-6 flex items-center gap-3 rounded-[20px] bg-[#111] px-5 py-4 text-white transition hover:bg-black"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#ef101b]">
+                <Megaphone className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-black uppercase tracking-[0.18em] text-[#ff343d]">Duyuru</span>
+                <span className="block truncate font-bold">{general[0].title}</span>
+              </span>
+              <span className="hidden shrink-0 items-center gap-1 text-sm font-bold text-white/70 group-hover:text-white sm:inline-flex">
+                {general.length > 1 ? `Tümü (${general.length})` : "Oku"} <ArrowRight className="h-4 w-4" />
+              </span>
+            </Link>
+          )}
           {branches.length > 0 ? (
             <BranchFinder
               branches={branches.map((b) => ({
@@ -33,9 +60,11 @@ export default async function BranchesPage() {
                 district: b.district,
                 address: b.address,
                 phone: b.phone,
+                phones: b.phones,
                 mapUrl: b.mapUrl,
                 openingHours: b.openingHours,
                 imageUrl: b.imageUrl,
+                announcement: latestByBranch.get(b.id) ?? null,
               }))}
             />
           ) : (

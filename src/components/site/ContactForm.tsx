@@ -135,7 +135,11 @@ function ContactFormInner({ branches, defaultTopic = "GENEL", onReset }: Props &
       </button>
 
       <p className="flex items-center justify-center gap-2 text-center text-xs font-medium text-black/45">
-        <Lock className="h-3.5 w-3.5" /> Bilgilerin gizli tutulur, sadece sana dönüş yapmak için kullanılır.
+        <Lock className="h-3.5 w-3.5 shrink-0" />
+        <span>
+          Bilgilerin gizli tutulur, sadece sana dönüş yapmak için kullanılır.{" "}
+          <a href="/kvkk" target="_blank" className="underline underline-offset-2 hover:text-[#ef101b]">KVKK Aydınlatma Metni</a>
+        </span>
       </p>
     </form>
   );

@@ -19,13 +19,14 @@ const AREA_LABELS: Record<string, string> = {
   ads: "Reklamlar",
   messages: "Mesajlar",
   reviews: "Yorumlar",
+  announcements: "Duyurular",
   users: "Kullanıcılar",
   settings: "Ayarlar",
 };
 
 export default async function UsersPage() {
   const me = await requireUser("users");
-  const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" } });
+  const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" }, include: { branch: { select: { name: true } } } });
 
   return (
     <>
@@ -39,7 +40,10 @@ export default async function UsersPage() {
           <tr key={u.id} className="hover:bg-neutral-50">
             <Td className="font-medium">{u.name} {u.id === me.id && <Badge>Sen</Badge>}</Td>
             <Td>{u.email}</Td>
-            <Td>{ROLE_LABELS[u.role]}</Td>
+            <Td>
+              {ROLE_LABELS[u.role]}
+              {u.role === "ANNOUNCER" && <span className="ml-1.5 text-xs text-neutral-500">({u.branch?.name ?? "tüm şubeler"})</span>}
+            </Td>
             <Td>{u.isActive ? <Badge tone="green">Aktif</Badge> : <Badge>Pasif</Badge>}</Td>
             <Td className="text-neutral-500">{u.lastLoginAt ? formatDate(u.lastLoginAt) : "-"}</Td>
             <Td className="text-right"><Link href={`/admin/kullanicilar/${u.id}`} className="text-sm text-brand hover:underline">Düzenle</Link></Td>

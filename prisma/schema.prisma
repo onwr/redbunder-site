@@ -22,6 +22,7 @@ enum Role {
   ADMIN // Her şey + kullanıcı yönetimi
   EDITOR // Menü, şubeler, QR, site içeriği
   HR // Başvurular, pozisyonlar
+  ANNOUNCER // Sadece duyurular (şubeye bağlıysa sadece o şubenin duyuruları)
 }
 
 model User {
@@ -35,10 +36,16 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  tasksAssigned Task[]    @relation("TaskAssignee")
-  tasksCreated  Task[]    @relation("TaskCreator")
-  adEntries     AdEntry[] @relation("AdEntryCreator")
+  /// Duyuru Editörü bir şubeye bağlıysa sadece o şube için duyuru yazabilir
+  branchId Int?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
+  tasksAssigned Task[]         @relation("TaskAssignee")
+  tasksCreated  Task[]         @relation("TaskCreator")
+  adEntries     AdEntry[]      @relation("AdEntryCreator")
+  announcements Announcement[] @relation("AnnouncementCreator")
+
+  @@index([branchId])
   @@map("users")
 }
 
@@ -65,9 +72,29 @@ model Branch {
 
   applications    Application[]
   contactMessages ContactMessage[]
+  /// Ana telefona (phone) ek iletişim numaraları: paket servis, WhatsApp...
+  phones          BranchPhone[]
+  announcements   Announcement[]
+  users           User[]
 
   @@index([isActive, sortOrder])
   @@map("branches")
+}
+
+model BranchPhone {
+  id         Int     @id @default(autoincrement())
+  /// Örn: "Paket servis", "Sabit hat" (opsiyonel)
+  label      String? @db.VarChar(40)
+  number     String  @db.VarChar(20)
+  /// Sitede WhatsApp linki olarak da gösterilir
+  isWhatsapp Boolean @default(false)
+  sortOrder  Int     @default(0)
+
+  branchId Int
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId, sortOrder])
+  @@map("branch_phones")
 }
 
 /**
@@ -223,6 +250,27 @@ model Setting {
   updatedAt DateTime @updatedAt
 
   @@map("settings")
+}
+
+/// Sitedeki duyurular (/duyurular, şube kartları). branchId boşsa tüm şubeler için geçerli
+model Announcement {
+  id          Int       @id @default(autoincrement())
+  title       String    @db.VarChar(150)
+  body        String    @db.Text
+  isPublished Boolean   @default(true)
+  /// Bu tarihten sonra sitede otomatik gizlenir (opsiyonel, gün dahil)
+  endsAt      DateTime? @db.Date
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  branchId    Int?
+  branch      Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdById Int?
+  createdBy   User?   @relation("AnnouncementCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([isPublished, createdAt])
+  @@index([branchId])
+  @@map("announcements")
 }
 
 /// Ana sayfadaki müşteri yorumları (admin panelinden elle eklenir)

@@ -23,7 +23,7 @@ export default function Header() {
 
         {/* Masaüstü menü */}
         <nav className="hidden lg:block">
-          <ul className="flex items-center gap-6 xl:gap-9">
+          <ul className="flex items-center gap-5 xl:gap-6 2xl:gap-9">
             {NAV_LINKS.map((l) => (
               <li key={l.href}>
                 <NavLink href={l.href} active={isActive(l.href)}>{l.label}</NavLink>
@@ -38,7 +38,8 @@ export default function Header() {
         <div className="flex items-center gap-3">
           <Link
             href="/menu"
-            className="group inline-flex items-center gap-2 rounded-[12px] bg-[#ef101b] px-4 py-3 text-[12px] font-black uppercase text-white shadow-[0_10px_32px_rgba(239,16,27,0.28)] transition-all duration-300 hover:-translate-y-[2px] hover:bg-[#ff1825] hover:shadow-[0_14px_40px_rgba(239,16,27,0.4)] sm:px-5 sm:text-[13px]"
+            // lg–xl arası gizli: 8 menü bağlantısına yer açar (Menü zaten menüde)
+            className="group inline-flex lg:hidden xl:inline-flex items-center gap-2 rounded-[12px] bg-[#ef101b] px-4 py-3 text-[12px] font-black uppercase text-white shadow-[0_10px_32px_rgba(239,16,27,0.28)] transition-all duration-300 hover:-translate-y-[2px] hover:bg-[#ff1825] hover:shadow-[0_14px_40px_rgba(239,16,27,0.4)] sm:px-5 sm:text-[13px]"
           >
             <UtensilsCrossed className="h-4 w-4" />
             Menüyü Gör
@@ -94,7 +95,7 @@ function NavLink({ href, active, external, children }: { href: string; active?: 
     <Link
       href={href}
       className={cn(
-        "relative py-2 font-display text-[17px] font-bold uppercase tracking-[-0.01em] transition-colors",
+        "relative whitespace-nowrap py-2 font-display text-[15px] font-bold xl:text-[17px] uppercase tracking-[-0.01em] transition-colors",
         active ? "text-[#ff343d]" : "text-white/85 hover:text-white",
       )}
       {...(external ? { target: "_blank", rel: "noreferrer" } : {})}

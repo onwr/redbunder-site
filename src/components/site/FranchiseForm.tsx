@@ -101,7 +101,8 @@ function FranchiseFormInner({ onReset }: { onReset: () => void }) {
       <label className="flex items-start gap-3 text-sm font-medium text-black/60">
         <input type="checkbox" name="kvkkConsent" className="mt-0.5 h-5 w-5 shrink-0 accent-[#ef101b]" />
         <span>
-          Kişisel verilerimin franchise başvurusunun değerlendirilmesi amacıyla işlenmesini kabul ediyorum.
+          <a href="/kvkk" target="_blank" className="font-bold text-[#111] underline underline-offset-2 hover:text-[#ef101b]">KVKK Aydınlatma Metni</a>&apos;ni
+          okudum; kişisel verilerimin franchise başvurusunun değerlendirilmesi amacıyla işlenmesini kabul ediyorum.
           {err("kvkkConsent") && <span className="mt-1 block text-xs font-semibold text-[#ef101b]">{err("kvkkConsent")}</span>}
         </span>
       </label>

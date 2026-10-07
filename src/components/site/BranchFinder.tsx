@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Clock3, MapPin, Navigation, Phone, Search, Store, UtensilsCrossed } from "lucide-react";
-import { branchDirectionsUrl, cn } from "@/lib/utils";
+import { Clock3, MapPin, Megaphone, MessageCircle, Navigation, Phone, Search, Store, UtensilsCrossed } from "lucide-react";
+import { branchDirectionsUrl, cn, telHref, whatsappUrl } from "@/lib/utils";
+
+export type BranchPhoneData = { id: number; label: string | null; number: string; isWhatsapp: boolean };
 
 export type BranchCardData = {
   id: number;
@@ -12,9 +14,12 @@ export type BranchCardData = {
   district: string | null;
   address: string | null;
   phone: string | null;
+  phones: BranchPhoneData[];
   mapUrl: string | null;
   openingHours: string | null;
   imageUrl: string | null;
+  /** Şubeye özel en yeni duyuru + toplam sayı */
+  announcement: { title: string; count: number } | null;
 };
 
 /** Şube arama + ilçe filtresi + kart listesi */
@@ -136,6 +141,18 @@ function BranchCard({ branch: b }: { branch: BranchCardData }) {
         </h2>
       </div>
 
+      {/* Şube duyurusu */}
+      {b.announcement && (
+        <Link
+          href={`/duyurular?sube=${b.slug}`}
+          className="flex items-center gap-2 bg-[#ef101b] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#ff1825]"
+        >
+          <Megaphone className="h-4 w-4 shrink-0" />
+          <span className="min-w-0 flex-1 truncate">{b.announcement.title}</span>
+          {b.announcement.count > 1 && <span className="shrink-0 rounded-full bg-white/20 px-2 text-xs">+{b.announcement.count - 1}</span>}
+        </Link>
+      )}
+
       {/* Bilgiler */}
       <div className="flex flex-1 flex-col p-5">
         <ul className="space-y-3 text-sm">
@@ -143,9 +160,20 @@ function BranchCard({ branch: b }: { branch: BranchCardData }) {
           {b.openingHours && <InfoRow icon={<Clock3 />}>{b.openingHours}</InfoRow>}
           {b.phone && (
             <InfoRow icon={<Phone />}>
-              <a href={`tel:${b.phone}`} className="font-bold text-[#111] hover:text-[#ef101b]">{b.phone}</a>
+              <a href={telHref(b.phone)} className="font-bold text-[#111] hover:text-[#ef101b]">{b.phone}</a>
             </InfoRow>
           )}
+          {b.phones.map((p) => (
+            <InfoRow key={p.id} icon={p.isWhatsapp ? <MessageCircle /> : <Phone />}>
+              {p.label && <span className="mr-1.5 text-black/45">{p.label}:</span>}
+              <a href={telHref(p.number)} className="font-bold text-[#111] hover:text-[#ef101b]">{p.number}</a>
+              {p.isWhatsapp && (
+                <a href={whatsappUrl(p.number)} target="_blank" rel="noreferrer" className="ml-2 text-xs font-bold text-[#128c4a] hover:underline">
+                  WhatsApp
+                </a>
+              )}
+            </InfoRow>
+          ))}
         </ul>
 
         <div className="mt-auto grid grid-cols-2 gap-2 pt-6">

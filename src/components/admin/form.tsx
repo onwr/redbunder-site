@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, startTransition, useActionState, useContext, type ReactNode } from "react";
+import { createContext, startTransition, useActionState, useContext, useState, type ReactNode } from "react";
 import { initialActionState, type ActionState } from "@/lib/action-state";
 import { cn } from "@/lib/utils";
 
@@ -132,6 +132,88 @@ export function CheckboxField({ name, label, defaultChecked }: { name: string; l
       <input type="checkbox" name={name} defaultChecked={defaultChecked} className="size-[18px] accent-[#ef101b]" />
       {label}
     </label>
+  );
+}
+
+type PhoneRow = { key: number; label: string; number: string; isWhatsapp: boolean };
+
+/**
+ * Etiketli telefon listesi (satır ekle/sil). Her satır phoneLabel / phoneNumber / phoneWhatsapp
+ * olarak gönderilir; checkbox yerine gizli "1"/"0" alanı kullanılır ki satır sıraları kaymasın.
+ */
+export function PhoneListField({
+  name = "phones",
+  label,
+  hint,
+  initial = [],
+}: {
+  name?: string;
+  label: string;
+  hint?: string;
+  initial?: { label: string | null; number: string; isWhatsapp: boolean }[];
+}) {
+  const [rows, setRows] = useState<PhoneRow[]>(() => initial.map((p, i) => ({ key: i, label: p.label ?? "", number: p.number, isWhatsapp: p.isWhatsapp })));
+  const [nextKey, setNextKey] = useState(initial.length);
+  const update = (key: number, patch: Partial<PhoneRow>) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+
+  return (
+    <FieldShell name={name} label={label} hint={hint}>
+      <div className="space-y-2">
+        {rows.map((r) => (
+          <div key={r.key} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+            <input
+              name="phoneLabel"
+              value={r.label}
+              onChange={(e) => update(r.key, { label: e.target.value })}
+              placeholder="Etiket (ör. Paket servis)"
+              maxLength={40}
+              list="branch-phone-labels"
+              className={cn(inputClass, "sm:w-48")}
+            />
+            <input
+              name="phoneNumber"
+              type="tel"
+              value={r.number}
+              onChange={(e) => update(r.key, { number: e.target.value })}
+              placeholder="0312 123 45 67"
+              maxLength={20}
+              className={cn(inputClass, "flex-1")}
+            />
+            <input type="hidden" name="phoneWhatsapp" value={r.isWhatsapp ? "1" : "0"} />
+            <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-semibold">
+              <input type="checkbox" checked={r.isWhatsapp} onChange={(e) => update(r.key, { isWhatsapp: e.target.checked })} className="size-4 accent-[#ef101b]" />
+              WhatsApp
+            </label>
+            <button
+              type="button"
+              onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
+              className="shrink-0 rounded-[10px] px-2.5 py-2 text-xs font-bold text-[#c40812] hover:bg-[#ef101b]/[0.06]"
+              aria-label="Numarayı kaldır"
+            >
+              Kaldır
+            </button>
+          </div>
+        ))}
+        <datalist id="branch-phone-labels">
+          <option value="Paket servis" />
+          <option value="Sabit hat" />
+          <option value="Cep" />
+          <option value="WhatsApp sipariş" />
+        </datalist>
+        {rows.length < 10 && (
+          <button
+            type="button"
+            onClick={() => {
+              setRows((rs) => [...rs, { key: nextKey, label: "", number: "", isWhatsapp: false }]);
+              setNextKey((k) => k + 1);
+            }}
+            className="rounded-[10px] border border-dashed border-black/20 px-3.5 py-2 text-xs font-bold text-[#111] hover:border-[#ef101b] hover:text-[#ef101b]"
+          >
+            + Numara ekle
+          </button>
+        )}
+      </div>
+    </FieldShell>
   );
 }
 

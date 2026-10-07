@@ -15,7 +15,9 @@ export async function saveUser(_prev: ActionState, formData: FormData): Promise<
 
   const parsed = id ? userUpdateSchema.safeParse(raw) : userCreateSchema.safeParse(raw);
   if (!parsed.success) return validationFailed(parsed.error);
-  const { password, ...data } = parsed.data;
+  const { password, ...rest } = parsed.data;
+  // Şube bağı sadece Duyuru Editörü için
+  const data = { ...rest, branchId: rest.role === "ANNOUNCER" ? rest.branchId : null };
 
   // Kendini kilitleme: kendi rolünü düşüremez / kendini pasife alamaz
   if (id === me.id && (data.role !== "ADMIN" || !data.isActive)) {

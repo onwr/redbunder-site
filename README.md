@@ -48,7 +48,11 @@ npm run dev            # http://localhost:3000 · panel: http://localhost:3000/a
 | `/subeler` · `/hakkimizda` | Şube bulucu · hikaye |
 | `/franchise` | Franchise tanıtımı + başvuru formu → Admin > Mesajlar (konu: Franchise; şehir, bütçe, lokasyon, deneyim mesaj metninde) |
 | `/iletisim` | Konu seçmeli form (Genel, Öneri ve Görüşler, Şikayet, Franchise, Diğer) + opsiyonel şube → Admin > Mesajlar. `?konu=oneri` ön seçer. Instagram kartı Site Ayarları'ndan |
+| `/duyurular` | Yayındaki duyurular, şube filtresi (`?sube=<slug>` → o şube + tüm şubeler). Üst menüde (`NAV_LINKS`) |
+| `/kvkk` | KVKK aydınlatma metni. Unvan, adres, başvuru e-postası, KEP: Site Ayarları > KVKK. Footer'dan ve iletişim/franchise formlarından linkli. Metin `src/app/(site)/kvkk/page.tsx`'te – yayın öncesi hukuk kontrolü önerilir |
 | `/api/menu` | Menü JSON |
+| `/sitemap.xml` · `/robots.txt` | Header menüsündeki sayfalar (`NAV_LINKS`) · `/admin` ve `/api/` taranmaz. Adresler `NEXT_PUBLIC_SITE_URL`'den üretilir |
+| 404 | `src/app/not-found.tsx` (site görünümü, indekslenmez) · panelde `admin/(panel)/not-found.tsx` (sidebar korunur) |
 
 ## Yönetim Paneli (`/admin`)
 
@@ -59,13 +63,14 @@ Veritabanındaki kullanıcılarla e-posta + şifre girişi. Roller:
 | Yönetici (`ADMIN`) | Her şey + kullanıcı yönetimi |
 | Menü Editörü (`EDITOR`) | Görevler, reklam raporları, menü, şubeler, QR, mesajlar, yorumlar, site ayarları |
 | İnsan Kaynakları (`HR`) | Görevler, başvurular, pozisyonlar |
+| Duyuru Editörü (`ANNOUNCER`) | Sadece duyurular. Kullanıcıda şube seçilirse yalnızca o şubenin duyurularını görür/yazar; boşsa tüm şubeler |
 
 Yetki haritası: `src/lib/constants.ts` → `ROLE_AREAS`. Her sayfa ve action `requireUser("<bölüm>")` ile korunur; `src/proxy.ts` sadece oturum çerezine bakan ön kontroldür.
 
 | Bölüm | Özellikler |
 |---|---|
 | Ürünler / Kategoriler | CRUD, görsel yükleme, yeni/popüler/acı etiketleri, kalori, alerjen, sıralama, hızlı yayından kaldırma |
-| Şubeler | Adres, telefon, saat, harita linki, görsel (Şubeler sayfası + kariyer formu) |
+| Şubeler | Adres, ana telefon + etiketli ek numaralar (paket servis, WhatsApp… en fazla 10, `branch_phones`), saat, harita linki, görsel (Şubeler sayfası, ana sayfa + kariyer formu) |
 | QR Menü | Tek QR kod → `/menu` (`src/lib/qr.ts` → `QR_MENU_PATH`), ortasında logo (`public/qr-mark.png`, `npm run icons` ile üretilir; hata düzeltme seviyesi H). PNG (1024px) ve SVG (matbaa, logo gömülü) indirme |
 | Başvurular | cv'den gelenler; filtre, arama, durum + not, CSV/Excel, ara/WhatsApp |
 | Pozisyonlar | Kariyer formundaki alanlar (başvurusu olan pozisyon silinmez, pasife alınır) |
@@ -74,8 +79,9 @@ Yetki haritası: `src/lib/constants.ts` → `ROLE_AREAS`. Her sayfa ve action `r
 | Kullanıcılar | Ekle/düzenle/sil, rol, pasife alma (kendini kilitleyemezsin) |
 | Görevler & Takvim | Ay takvimi + liste; durum (yapılacak/devam/tamam), sorumlu, öncelik, kategori, ilgili platform; gecikenler kırmızı, sidebar rozeti = bugün + gecikmiş açık görev; tek tıkla tamamla |
 | Reklam Raporları | Elle girilen platform verilerinden (Meta, Google, TikTok, Trendyol Go, Yemeksepeti, Getir, Migros) ay/aralık özeti: harcama, ciro, ROAS, CTR, TBM, sipariş başı maliyet; platform kırılımı, son 6 ay trendi. **Sunum / Yazdır** → `/admin/rapor` (PDF olarak kaydedilebilir). Kayıtlar CSV olarak indirilebilir |
+| Duyurular | Başlık + metin, şube (boş = tüm şubeler), opsiyonel bitiş tarihi (sonra otomatik gizlenir), taslak/yayında. Sitede `/duyurular` (şube filtresi `?sube=<slug>`), `/subeler` kartlarında şube duyurusu şeridi, genel duyurular sayfa üstünde |
 | Yorumlar | Ana sayfadaki müşteri yorumları (sadece gerçek yorumlar; aktif yorum yoksa bölüm gizlenir) |
-| Site Ayarları | İletişim, sosyal medya, sipariş platformu linkleri (Trendyol Go, Yemeksepeti, Getir, Migros), ana sayfa kampanya bandı |
+| Site Ayarları | İletişim, sosyal medya, sipariş platformu linkleri (Trendyol Go, Yemeksepeti, Getir, Migros), ana sayfa kampanya bandı, KVKK veri sorumlusu bilgileri |
 
 ## Klasör yapısı
 

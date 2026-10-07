@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CalendarCheck2, Check, Coins, FileUser, Mail, Plus, Sandwich, TrendingUp } from "lucide-react";
+import { ArrowRight, CalendarCheck2, Check, Coins, FileUser, Mail, Megaphone, Plus, Sandwich, TrendingUp } from "lucide-react";
 import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { setTaskStatus } from "@/actions/tasks";
@@ -23,9 +23,10 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
     menu: can(user.role, "menu"),
     hr: can(user.role, "applications"),
     messages: can(user.role, "messages"),
+    announcements: can(user.role, "announcements"),
   };
 
-  const [dueTasks, weekTasks, openTasks, adReport, newApps, latestApps, unread, latestMessages, activeProducts] = await Promise.all([
+  const [dueTasks, weekTasks, openTasks, adReport, newApps, latestApps, unread, latestMessages, activeProducts, liveAnnouncements] = await Promise.all([
     show.tasks
       ? prisma.task.findMany({
           where: { status: { not: "TAMAM" }, dueDate: { lte: isoToDate(today) } },
@@ -51,6 +52,15 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
     show.messages ? prisma.contactMessage.count({ where: { isRead: false } }) : 0,
     show.messages ? prisma.contactMessage.findMany({ take: 5, orderBy: { createdAt: "desc" } }) : [],
     show.menu ? prisma.product.count({ where: { isActive: true } }) : 0,
+    show.announcements
+      ? prisma.announcement.count({
+          where: {
+            isPublished: true,
+            OR: [{ endsAt: null }, { endsAt: { gte: isoToDate(today) } }],
+            ...(user.branchId ? { branchId: user.branchId } : {}),
+          },
+        })
+      : 0,
   ]);
 
   const firstName = user.name.split(" ")[0];
@@ -65,6 +75,10 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
           show.tasks ? (
             <ButtonLink href="/admin/gorevler/yeni">
               <Plus className="h-4 w-4" /> Yeni görev
+            </ButtonLink>
+          ) : show.announcements ? (
+            <ButtonLink href="/admin/duyurular/yeni">
+              <Plus className="h-4 w-4" /> Yeni duyuru
             </ButtonLink>
           ) : undefined
         }
@@ -91,6 +105,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
         {show.hr && <StatCard label="Yeni başvuru" value={newApps} hint="İncelenmeyi bekliyor" icon={<FileUser />} href="/admin/basvurular?status=YENI" />}
         {show.messages && <StatCard label="Okunmamış mesaj" value={unread} icon={<Mail />} href="/admin/mesajlar?durum=okunmamis" />}
         {show.menu && <StatCard label="Aktif ürün" value={activeProducts} icon={<Sandwich />} href="/admin/menu/urunler" />}
+        {show.announcements && <StatCard label="Yayındaki duyuru" value={liveAnnouncements} icon={<Megaphone />} href="/admin/duyurular" />}
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-2">

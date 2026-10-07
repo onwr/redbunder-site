@@ -66,5 +66,9 @@ export async function getMenu(): Promise<MenuCategoryWithItems[]> {
 }
 
 export function getActiveBranches() {
-  return prisma.branch.findMany({ where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
+  return prisma.branch.findMany({
+    where: { isActive: true },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    include: { phones: { orderBy: { sortOrder: "asc" }, select: { id: true, label: true, number: true, isWhatsapp: true } } },
+  });
 }

@@ -107,7 +107,10 @@ export default async function Footer() {
 
         <div className="flex flex-col items-center justify-between gap-2 border-t border-white/[0.08] py-5 text-xs text-white/40 sm:flex-row">
           <p>© {new Date().getFullYear()} Red Bunder. Tüm hakları saklıdır.</p>
-          <p>Ankara&apos;da ateşte pişer ♥</p>
+          <div className="flex items-center gap-4">
+            <Link href="/kvkk" className="transition hover:text-white">KVKK Aydınlatma Metni</Link>
+            <p>Ankara&apos;da ateşte pişer ♥</p>
+          </div>
         </div>
       </div>
     </footer>

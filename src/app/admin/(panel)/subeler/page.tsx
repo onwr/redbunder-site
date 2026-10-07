@@ -7,7 +7,10 @@ export const metadata = { title: "Şubeler" };
 
 export default async function BranchesPage() {
   await requireUser("branches");
-  const branches = await prisma.branch.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
+  const branches = await prisma.branch.findMany({
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    include: { _count: { select: { phones: true } } },
+  });
 
   return (
     <>
@@ -23,7 +26,10 @@ export default async function BranchesPage() {
               <Link href={`/admin/subeler/${b.id}`} className="font-medium hover:text-brand">{b.name}</Link>
             </Td>
             <Td>{b.district ?? "-"}</Td>
-            <Td>{b.phone ?? "-"}</Td>
+            <Td>
+              {b.phone ?? "-"}
+              {b._count.phones > 0 && <span className="ml-1.5 text-xs text-neutral-500">+{b._count.phones} numara</span>}
+            </Td>
             <Td>{b.openingHours ?? "-"}</Td>
             <Td>{b.isActive ? <Badge tone="green">Aktif</Badge> : <Badge>Pasif</Badge>}</Td>
             <Td className="text-right">

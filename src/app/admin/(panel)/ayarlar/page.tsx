@@ -16,7 +16,7 @@ export default async function SettingsPage() {
     <>
       <PageHeader
         title="Site Ayarları"
-        description="Header, footer, iletişim sayfası, sipariş platformları ve ana sayfa kampanya bandında kullanılan bilgiler. Boş bırakılan alanlar sitede gösterilmez."
+        description="Header, footer, iletişim sayfası, sipariş platformları, ana sayfa kampanya bandı ve KVKK sayfasında (/kvkk) kullanılan bilgiler. Boş bırakılan alanlar sitede gösterilmez."
       />
       <Card className="max-w-3xl">
         <ActionForm action={saveSettings}>

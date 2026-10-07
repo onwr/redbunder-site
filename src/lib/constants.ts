@@ -20,6 +20,7 @@ export const NAV_LINKS = [
   { href: "/", label: "Ana Sayfa" },
   { href: "/menu", label: "Menü" },
   { href: "/subeler", label: "Şubeler" },
+  { href: "/duyurular", label: "Duyurular" },
   { href: "/franchise", label: "Franchise" },
   { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/iletisim", label: "İletişim" },
@@ -31,6 +32,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   ADMIN: "Yönetici",
   EDITOR: "Menü Editörü",
   HR: "İnsan Kaynakları",
+  ANNOUNCER: "Duyuru Editörü",
 };
 
 /** Admin panelindeki bölümler */
@@ -46,14 +48,16 @@ export type AdminArea =
   | "career"
   | "messages"
   | "reviews"
+  | "announcements"
   | "users"
   | "settings";
 
 /** Hangi rol hangi bölüme erişebilir */
 export const ROLE_AREAS: Record<Role, AdminArea[]> = {
-  ADMIN: ["dashboard", "tasks", "ads", "menu", "branches", "qr", "applications", "positions", "career", "messages", "reviews", "users", "settings"],
-  EDITOR: ["dashboard", "tasks", "ads", "menu", "branches", "qr", "career", "messages", "reviews", "settings"],
+  ADMIN: ["dashboard", "tasks", "ads", "menu", "branches", "qr", "applications", "positions", "career", "messages", "reviews", "announcements", "users", "settings"],
+  EDITOR: ["dashboard", "tasks", "ads", "menu", "branches", "qr", "career", "messages", "reviews", "announcements", "settings"],
   HR: ["dashboard", "tasks", "applications", "positions", "career"],
+  ANNOUNCER: ["dashboard", "announcements"],
 };
 
 export function can(role: Role, area: AdminArea) {
@@ -71,6 +75,7 @@ export const ADMIN_NAV: { href: string; label: string; area: AdminArea; group: s
   { href: "/admin/subeler", label: "Şubeler", area: "branches", group: "İçerik" },
   { href: "/admin/qr", label: "QR Menü", area: "qr", group: "İçerik" },
   { href: "/admin/yorumlar", label: "Yorumlar", area: "reviews", group: "İçerik" },
+  { href: "/admin/duyurular", label: "Duyurular", area: "announcements", group: "İçerik" },
   { href: "/admin/mesajlar", label: "Mesajlar", area: "messages", group: "İletişim & İK" },
   { href: "/admin/basvurular", label: "Başvurular", area: "applications", group: "İletişim & İK" },
   { href: "/admin/pozisyonlar", label: "Pozisyonlar", area: "positions", group: "İletişim & İK" },
@@ -245,6 +250,9 @@ export const SETTING_FIELDS = [
   { key: "campaign_subtitle", label: "Kampanya alt başlığı", group: "Ana Sayfa Kampanya Bandı" },
   { key: "campaign_text", label: "Kampanya açıklaması", group: "Ana Sayfa Kampanya Bandı" },
   { key: "campaign_url", label: "Kampanya butonu linki", group: "Ana Sayfa Kampanya Bandı" },
+  { key: "company_title", label: "Veri sorumlusu (şirket ticari unvanı)", group: "KVKK" },
+  { key: "kvkk_email", label: "KVKK başvuru e-postası (boşsa genel e-posta)", group: "KVKK" },
+  { key: "kvkk_kep", label: "KEP adresi (opsiyonel)", group: "KVKK" },
 ] as const;
 
 /** Online sipariş platformları – linkler Site Ayarları'ndan, girilmeyen gösterilmez */

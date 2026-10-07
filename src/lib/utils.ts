@@ -50,6 +50,17 @@ export function branchDirectionsUrl(b: { name: string; address: string | null; d
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 }
 
+/** "0312 123 45 67" → "tel:03121234567" */
+export function telHref(phone: string) {
+  return `tel:${phone.replace(/[^\d+]/g, "")}`;
+}
+
+/** "0532 123 45 67" / "+90 532..." / "532..." → "https://wa.me/905321234567" */
+export function whatsappUrl(phone: string) {
+  const digits = phone.replace(/\D/g, "").replace(/^0+/, "");
+  return `https://wa.me/${digits.startsWith("90") && digits.length === 12 ? digits : `90${digits}`}`;
+}
+
 /** "https://instagram.com/redbunder/" → "@redbunder" */
 export function instagramHandle(url?: string) {
   if (!url) return "Instagram";

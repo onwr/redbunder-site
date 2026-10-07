@@ -1,10 +1,10 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowRight, Beef, Bike, BriefcaseBusiness, Clock3, Handshake, MapPin, Navigation, Phone, Soup, Star } from "lucide-react";
+import { ArrowRight, Beef, Bike, BriefcaseBusiness, Clock3, Handshake, MapPin, MessageCircle, Navigation, Phone, Soup, Star } from "lucide-react";
 import { OrderButton, type OrderPlatform } from "@/components/home/OrderProvider";
 import { InstagramIcon } from "@/components/site/SocialIcons";
 import AnkaraSkyline from "@/components/site/AnkaraSkyline";
-import { branchDirectionsUrl, cn } from "@/lib/utils";
+import { branchDirectionsUrl, cn, telHref, whatsappUrl } from "@/lib/utils";
 
 /* ================================ Ortak ================================ */
 
@@ -143,6 +143,7 @@ type HomeBranch = {
   district: string | null;
   address: string | null;
   phone: string | null;
+  phones: { id: number; label: string | null; number: string; isWhatsapp: boolean }[];
   openingHours: string | null;
   mapUrl: string | null;
 };
@@ -211,9 +212,24 @@ export function BranchesSection({ branches }: { branches: HomeBranch[] }) {
                   {b.phone && (
                     <li className="flex gap-2">
                       <Phone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ef101b]" />
-                      <a href={`tel:${b.phone}`} className="hover:text-[#ef101b]">{b.phone}</a>
+                      <a href={telHref(b.phone)} className="hover:text-[#ef101b]">{b.phone}</a>
                     </li>
                   )}
+                  {b.phones.map((p) => (
+                    <li key={p.id} className="flex gap-2">
+                      {p.isWhatsapp ? (
+                        <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ef101b]" />
+                      ) : (
+                        <Phone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ef101b]" />
+                      )}
+                      <span>
+                        {p.label && <span className="text-black/45">{p.label}: </span>}
+                        <a href={p.isWhatsapp ? whatsappUrl(p.number) : telHref(p.number)} {...(p.isWhatsapp ? { target: "_blank", rel: "noreferrer" } : {})} className="hover:text-[#ef101b]">
+                          {p.number}
+                        </a>
+                      </span>
+                    </li>
+                  ))}
                   {b.openingHours && (
                     <li className="flex gap-2">
                       <Clock3 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ef101b]" />

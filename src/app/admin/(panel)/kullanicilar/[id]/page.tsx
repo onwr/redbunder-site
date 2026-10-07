@@ -10,12 +10,15 @@ export default async function UserEditPage({ params }: PageProps<"/admin/kullani
   const me = await requireUser("users");
   const { id } = await params;
   const isNew = id === "yeni";
-  const user = isNew
-    ? null
-    : await prisma.user.findUnique({
-        where: { id: Number(id) || 0 },
-        select: { id: true, name: true, email: true, role: true, isActive: true },
-      });
+  const [user, branches] = await Promise.all([
+    isNew
+      ? null
+      : prisma.user.findUnique({
+          where: { id: Number(id) || 0 },
+          select: { id: true, name: true, email: true, role: true, isActive: true, branchId: true },
+        }),
+    prisma.branch.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
+  ]);
   if (!isNew && !user) notFound();
 
   return (
@@ -34,6 +37,14 @@ export default async function UserEditPage({ params }: PageProps<"/admin/kullani
             label="Rol"
             defaultValue={user?.role ?? "EDITOR"}
             options={Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }))}
+          />
+          <SelectField
+            name="branchId"
+            label="Bağlı şube (sadece Duyuru Editörü)"
+            defaultValue={user?.branchId ?? ""}
+            placeholder="Tüm şubeler"
+            options={branches.map((b) => ({ value: b.id, label: b.name }))}
+            hint="Şube seçilirse kullanıcı sadece o şube için duyuru yazabilir. Diğer rollerde dikkate alınmaz."
           />
           <TextField
             name="password"

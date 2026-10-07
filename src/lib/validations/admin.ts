@@ -66,6 +66,31 @@ export const branchSchema = z.object({
   sortOrder,
 });
 
+/** Şubenin ek numaraları – boş numaralı satırlar atlanır */
+export const branchPhonesSchema = z
+  .array(
+    z.object({
+      label: optionalText(40),
+      number: z
+        .string()
+        .trim()
+        .max(20, "Numara en fazla 20 karakter.")
+        .regex(/^\+?[\d\s()-]{7,}$/, "Geçerli bir telefon numarası girin."),
+      isWhatsapp: z.boolean(),
+    }),
+  )
+  .max(10, "En fazla 10 numara eklenebilir.");
+
+/** FormData'daki phoneLabel / phoneNumber / phoneWhatsapp satırlarını diziye çevirir */
+export function phonesFromForm(formData: FormData) {
+  const labels = formData.getAll("phoneLabel").map(String);
+  const whatsapp = formData.getAll("phoneWhatsapp").map(String);
+  return formData
+    .getAll("phoneNumber")
+    .map((n, i) => ({ label: labels[i] ?? "", number: String(n), isWhatsapp: whatsapp[i] === "1" }))
+    .filter((p) => p.number.trim() !== "");
+}
+
 /* ---------------------------------- Kariyer ---------------------------------- */
 
 export const positionSchema = z.object({
@@ -100,12 +125,17 @@ export type ApplicationListQuery = z.output<typeof applicationListQuerySchema>;
 
 /* --------------------------------- Kullanıcılar -------------------------------- */
 
-const role = z.enum(["ADMIN", "EDITOR", "HR"], { error: "Rol seçin." });
+const role = z.enum(["ADMIN", "EDITOR", "HR", "ANNOUNCER"], { error: "Rol seçin." });
+
+/** Boş → null (tüm şubeler) */
+const nullableId = z.preprocess((v) => (v === "" || v == null ? null : v), z.coerce.number().int().positive().nullable());
 
 export const userCreateSchema = z.object({
   name: z.string().trim().min(2).max(100),
   email: z.email("Geçerli bir e-posta girin.").trim().toLowerCase(),
   role,
+  /** Sadece Duyuru Editörü için anlamlı; diğer rollerde action'da null'a çekilir */
+  branchId: nullableId,
   password: z.string().min(8, "Şifre en az 8 karakter olmalı.").max(72),
   isActive: checkbox,
 });
@@ -132,6 +162,16 @@ export const reviewSchema = z.object({
   source: optionalText(40),
   isActive: checkbox,
   sortOrder,
+});
+
+/* --------------------------------- Duyurular --------------------------------- */
+
+export const announcementSchema = z.object({
+  title: z.string().trim().min(3, "Başlık en az 3 karakter.").max(150, "Başlık en fazla 150 karakter."),
+  body: z.string().trim().min(5, "Duyuru metni en az 5 karakter.").max(5000, "Duyuru metni en fazla 5000 karakter."),
+  branchId: nullableId,
+  endsAt: z.preprocess(emptyToNull, z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarih seçin.").nullable()),
+  isPublished: checkbox,
 });
 
 /* --------------------------------- Reklamlar --------------------------------- */
